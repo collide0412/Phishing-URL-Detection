@@ -1,10 +1,13 @@
 import ipaddress
 import re
+from tracemalloc import DomainFilter
+from urllib import response
 import urllib.request
 from bs4 import BeautifulSoup
 import socket
 import requests
 from googlesearch import search
+import urllib3
 import whois
 from datetime import date, datetime
 import time
@@ -174,9 +177,9 @@ class FeatureExtraction:
     def Favicon(self):
         try:
             for head in self.soup.find_all('head'):
-                for head.link in self.soup.find_all('link', href=True):
+                for head.link in self.soup.find_all('link', href=True): # type: ignore
                     dots = [x.start(0) for x in re.finditer('\.', head.link['href'])]
-                    if self.url in head.link['href'] or len(dots) == 1 or domain in head.link['href']:
+                    if self.url in head.link['href'] or len(dots) == 1 or DomainFilter in head.link['href']:
                         return 1
             return -1
         except:
@@ -421,7 +424,7 @@ class FeatureExtraction:
     # 26. WebsiteTraffic   
     def WebsiteTraffic(self):
         try:
-            rank = BeautifulSoup(urllib.request.urlopen("http://data.alexa.com/data?cli=10&dat=s&url=" + url).read(), "xml").find("REACH")['RANK']
+            rank = BeautifulSoup(urllib.request.urlopen("http://data.alexa.com/data?cli=10&dat=s&url=" + urllib3).read(), "xml").find("REACH")['RANK']
             if (int(rank) < 100000):
                 return 1
             return 0
@@ -431,7 +434,7 @@ class FeatureExtraction:
     # 27. PageRank
     def PageRank(self):
         try:
-            prank_checker_response = requests.post("https://www.checkpagerank.net/index.php", {"name": self.domain})
+            rank_checker_response = requests.post("https://www.checkpagerank.net/index.php", {"name": self.domain})
 
             global_rank = int(re.findall(r"Global Rank: ([0-9]+)", rank_checker_response.text)[0])
             if global_rank > 0 and global_rank < 100000:
